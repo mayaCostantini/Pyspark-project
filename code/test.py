@@ -18,7 +18,6 @@
 # ID_sched_class_pair = job_events_entries.map(lambda x: (x[job_ID_index], x[job_sched_class_index]))
 
 from collections import Counter 
-
-def mostFrequentValue(x) : 
-    return Counter(x).most_common()[0][0]
+a = [1, 1, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 5]
+print(sorted(a, key=Counter(a).get, reverse=True))
 

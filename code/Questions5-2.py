@@ -65,7 +65,7 @@ ID_sched_class_pair_task_most_common = task_events_entries.map(lambda x: (x[task
 
 union = sc.union
 
-# RDD with pairs ('job ID', '')
+# RDD with pairs ('job ID', 'scheduling class' if the most frequent scheduling class of the tasks == the scheduling class of their job, '-1' otherwise)
 task_job_sched_class_comparison = ID_sched_class_pair_job.union(ID_sched_class_pair_task_most_common).reduceByKey(lambda a,b: a if a==b else -1)
 
 diff_sched_class_count = task_job_sched_class_comparison.groupBy(lambda x: x[1])
@@ -75,16 +75,50 @@ diff_sched_class_count = task_job_sched_class_comparison.groupBy(lambda x: x[1])
 
 priority_task_index = 8 
 
-sched_class_priority_pair_task = task_events_entries.map(lambda x: (x[task_sched_class_index], x[priority_task_index])).groupBy(lambda x: x[0])
+# list containing pairs ('scheduling task number', 'list of tasks priorities')
+sched_class_priority_pair_task = task_events_entries.map(lambda x: (x[task_sched_class_index], x[priority_task_index])).groupByKey().map(lambda x : (x[0], list(x[1]))).collect()
 
-sched_class_priorities = {}
+sched_class_priority_pair_task_dict = {}
 
-for element in sched_class_priority_pair_task.collect() : 
-    if element[0] in sched_class_priorities : 
-        sched_class_priorities[element[0]] += list(element[1])
-        print(element[0], element[1])
-    else : 
-        sched_class_priorities[element[0]] = list(element[1])
+for element in sched_class_priority_pair_task : 
+    sched_class_priority_pair_task_dict[element[0]] = element[1]
 
-# print(sched_class_priorities)
-### Question 5 : 
+
+# for k in sched_class_priority_pair_task_dict.keys() : 
+#     plt.hist(sorted(sched_class_priority_pair_task_dict[k], key=Counter(sched_class_priority_pair_task_dict[k]).get, reverse=True), bins=range(len(set(sched_class_priority_pair_task_dict[k]))+2), edgecolor='black', color = 'red', align='right')
+#     plt.title(f'Repartition of priority codes for scheduling class = {k}')
+#     plt.show()
+
+
+
+### Question 5 :  Do tasks with low priority have a higher probability of being evicted ?
+
+low_priority_tasks = task_events_entries.map(lambda x: (x[priority_task_index], x[task_sched_class_index])).filter(lambda x: int(x[0]) <= 3)
+
+# plt.hist(sorted(low_priority_tasks.values().collect(), key=Counter(low_priority_tasks.values().collect()).get, reverse=True), bins=range(len(set(low_priority_tasks.values().collect()))+2), edgecolor='black', color='red', align='right')
+# plt.title('Distribution of the scheduling class codes for low priority tasks (inferior or equal to 3)')
+# plt.show()
+
+all_tasks_sched_class = task_events_entries.map(lambda x: (x[priority_task_index], x[task_sched_class_index]))
+
+# plt.hist(sorted(all_tasks_sched_class.values().collect(), key=Counter(all_tasks_sched_class.values().collect()).get, reverse=True), bins=range(len(set(all_tasks_sched_class.values().collect()))+2), edgecolor='black', color='red', align='right')
+# plt.title('Distribution of the scheduling class codes for all priorities tasks')
+# plt.show()
+
+
+### Question 6 : In general, do tasks from the same job run on the same machine?
+
+machine_index = 4  
+
+# RDD of pairs ('job ID', 'machine ID') : 
+job_ID_machine_pairs = task_events_entries.map(lambda x: (x[job_ID_index], x[machine_index])).groupByKey()
+
+nb_of_machines_job = []
+
+for element in job_ID_machine_pairs.values().collect() : 
+    nb_of_machines_job.append(len(list(element)))
+
+# plt.hist(sorted(nb_of_machines_job, key=Counter(nb_of_machines_job).get, reverse=True), bins=range(len(set(nb_of_machines_job))+2), color='blue', align='right')
+# plt.title('Number of machines required to run a job')
+# plt.show()
+# print(Counter(nb_of_machines_job))
