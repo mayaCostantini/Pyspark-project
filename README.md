@@ -11,7 +11,7 @@ The general instructions to install GSUtil are available via the following link 
 
 https://cloud.google.com/storage/docs/gsutil_install
 
-To download the archive : https://cloud.google.com/storage/docs/gsutil_install# alt-install
+To download the archive : https://cloud.google.com/storage/docs/gsutil_install#alt-install
 
 The GSUtil documentation can be accessed via https://cloud.google.com/storage/docs/gsutil 
  
